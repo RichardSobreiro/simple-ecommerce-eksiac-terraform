@@ -6,7 +6,7 @@ resource "aws_subnet" "subnet-private-us-east-1a-simpleecommerce" {
   tags = {
     "Name"                            = "subnet-private-us-east-1a-simpleecommerce"
     "kubernetes.io/role/internal-elb" = "1"
-    "kubernetes.io/cluster/iamrole-eks-simpleecommerce"      = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "shared"
   }
 }
 
@@ -18,7 +18,7 @@ resource "aws_subnet" "subnet-private-us-east-1b-simpleecommerce" {
   tags = {
     "Name"                            = "subnet-private-us-east-1b-simpleecommerce"
     "kubernetes.io/role/internal-elb" = "1"
-    "kubernetes.io/cluster/iamrole-eks-simpleecommerce"      = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "shared"
   }
 }
 
@@ -31,7 +31,7 @@ resource "aws_subnet" "subnet-public-us-east-1a-simpleecommerce" {
   tags = {
     "Name"                       = "subnet-public-us-east-1a-simpleecommerce"
     "kubernetes.io/role/elb"     = "1"
-    "kubernetes.io/cluster/iamrole-eks-simpleecommerce" = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "shared"
   }
 }
 
@@ -44,6 +44,6 @@ resource "aws_subnet" "subnet-public-us-east-1b-simpleecommerce" {
   tags = {
     "Name"                       = "subnet-public-us-east-1b-simpleecommerce"
     "kubernetes.io/role/elb"     = "1"
-    "kubernetes.io/cluster/iamrole-eks-simpleecommerce" = "owned"
+    "kubernetes.io/cluster/${var.cluster_name}"      = "shared"
   }
 }

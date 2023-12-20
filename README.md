@@ -16,7 +16,9 @@ AWS EKS cluster using terraform, AWS Controller for Kubernetes (ACK), and ELB Co
 
 2. [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
-3. Login into your AWS account:
+3. [Helm 3.8+](https://helm.sh/docs/intro/install/)
+
+4. Login into your AWS account:
 
 Here you have many options:
 
@@ -68,9 +70,89 @@ ssh -i "/tmp/eks_nodes_keypair.pem" ec2-user@10.0.26.128
 Then you should be able to access the EC2 instances from the EKS cluster using the
 Bastion Host instance as a reverse proxy.
 
+To close the connection, run the following command:
+
+```
+exit -- Closes the SSH connection between the bastion instance and the EKS Cluster instance
+exit -- Closes the SSH connection between your local machine and the bastion instance
+```
+
+- Export Kubernetes context:
+
+```
+aws eks --region us-east-1 update-kubeconfig --name ekscluster-simpleecommerce
+```
+
+Check connection to the control plane:
+
+```
+kubectl get svc
+kubectl get pods --all-namespaces
+```
+
+Deploy public NLBs:
+
+```
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/public-lb.yaml
+```
+
+Deploy private NLBs:
+
+```
+kubectl apply -f k8s/private-lb.yaml
+```
+
+- Deploy EKS cluster autoscaler
+
+```
+kubectl apply -f k8s/cluster-autoscaler.yaml
+```
+
+Verify that the autoscaler pod is up and running:
+
+```
+kubectl get pods -n kube-system
+```
+
+Check logs for any errors:
+
+```
+kubectl logs -l app=cluster-autoscaler -n kube-system -f
+```
+
+Verify that AWS autoscaling group has required tags:
+
+```
+k8s.io/cluster-autoscaler/<cluster-name> : owned
+k8s.io/cluster-autoscaler/enabled : TRUE
+```
+
+Split the terminal screen. In the first window run:
+
+```
+watch -n 1 -t kubectl get pods
+```
+
+In the second window run:
+
+```
+watch -n 1 -t kubectl get nodes
+```
+
+Now, to trigger autoscaling, by increasing replica for nginx deployment from 1 to 5.
+
+```
+kubectl apply -f k8s/deployment.yaml
+```
+
 - To remove all the resources created, run the destroy command
 
 ```
+kubectl delete -f k8s/cluster-autoscaler.yaml
+kubectl delete -f k8s/private-lb.yaml
+kubectl delete -f k8s/deployment.yaml
+kubectl delete -f k8s/public-lb.yaml
 terraform destroy --auto-approve
 ```
 
@@ -93,3 +175,5 @@ We are using **tls_private_key** to create a PEM (and OpenSSH) formatted private
 - [Elastic Container Registry (ECR)-Terraform](https://awstip.com/elastic-container-registry-ecr-terraform-d752753b6ac1)
 
 - [Create an AWS API Gateway to your EKS Cluster (with Terraform)](https://medium.com/@alex067/create-an-aws-api-gateway-to-your-eks-cluster-with-terraform-46cdc91d9cea)
+
+- [Manage HTTP APIs with the ACK APIGatewayv2 Controller](https://aws-controllers-k8s.github.io/community/docs/tutorials/apigatewayv2-reference-example/)
